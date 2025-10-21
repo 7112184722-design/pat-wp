@@ -28,5 +28,164 @@ The `echo: false` option disables the printing of code (only output is displayed
 
 # diseños experimentales 
 
+```{r}
+library (agricolae)
+```
+
+
 ##  DCA 
+factor -> dosis de fertilizacion nitrogenada 
+(kg/ha)
+- 0- testigo 
+- 50
+- 100
+- diseño: DCA
+- repeticiones: 5 
+- UE -> 3 dosis x 5 repiticones = 15 
+
+# Cargar la librería necesaria
+library(agricolae)
+
+# Definir los factores del diseño DCA
+niveles_dosis <- c(0, 50, 100)  # Dosis de fertilización nitrogenada
+replicaciones <- 5              # Número de repeticiones
+
+# Realizar el diseño DCA
+dca <- design.crd(trt = niveles_dosis, r = replicaciones)
+
+# Ver el diseño generado
+print(dca)
+
+
+```{r}
+dosis <- c(0, 50, 100)
+dca <- design.crd(trt = dosis, r = 5, seed = 123)
+dca$book
+```
+
 ## DBCA 
+factor 1 -> dosis de fertilizacion nitrogenada (hg/ha)
+factor 2 -> cultivares de papa
+- peruanita 
+- canchan
+- diseño:DBCA
+- repeticiones: 4
+- UE:3 dosis x 2 cultivos x 4 repeticiones = 24
+
+# Cargar la librería necesaria
+library(agricolae)
+
+# Definir los factores del diseño DBCA
+niveles_dosis <- c(0, 50, 100)         # Dosis de fertilización nitrogenada
+cultivares <- c("Peruanita", "Canchan") # Cultivares de papa
+replicaciones <- 4                    # Número de repeticiones
+
+# Crear los tratamientos cruzados (dosis x cultivares)
+tratamientos <- expand.grid(Dosis = niveles_dosis, Cultivar = cultivares)
+
+# Ver los tratamientos generados
+print(tratamientos)
+
+# Crear el diseño DBCA utilizando la función blockDesign
+dbca <- blockDesign(trt = tratamientos, r = replicaciones)
+
+# Ver el diseño generado
+print(dbca)
+
+
+
+
+```{r}
+cultivares <- c("Peruanita", "Canchan")
+tratamientos <- expand.grid(cultivar = cultivares, dosis = dosis)
+tratamientos$trt <- paste(tratamientos$cultivar, tratamientos$dosis, sep = "_")
+
+dbca <- design.rcbd(trt = tratamientos$trt, r = 4, seed = 456)
+dbca$book
+```
+
+```{r}
+dbca <- design.rcbd(trt = dosis, r = 4, seed = 456)
+dbca$book
+```
+
+
+```{r}
+cultivares <- c("Peruanita", "Canchan")
+
+dbca <- design.ab(
+  trt = c(3, 2),
+  r = 4,
+  design = "rcbd",
+  seed = 456
+)
+
+dbca$book
+```
+
+
+
+title: "MODELOS LINEALES MIXTOS"
+author: "ARACELY TUESTA"
+format: html
+---
+
+# pasos para analisis de datos 
+1. crear mi diseño experimental = modelo estadistico
+2. colectar los datos 
+3. importar y verficar los factores 
+4. analisi de varianza 
+
+
+#librerias
+
+```{r}
+library (tidyverse)
+library(googlesheets4)
+library(lme4)
+library(emmeans)
+```
+
+# cargar base de datos
+
+https://docs.google.com/spreadsheets/d/15r7ZwcZZHbEgltlF6gSFvCTFA-CFzVBWwg3mFlRyKPs/edit?gid=1263018298#gid=1263018298
+
+
+```{r}
+url <-"https://docs.google.com/spreadsheets/d/15r7ZwcZZHbEgltlF6gSFvCTFA-CFzVBWwg3mFlRyKPs/edit?gid=1263018298#gid=1263018298"
+
+gs <- url %>% 
+  as_sheets_id()
+
+fb <- gs %>% 
+  range_read("fb") %>% 
+  mutate(across(1:bloque, ~as.factor(.)))
+str(fb)
+
+
+```
+
+
+# modelo 
+$$  wue_{tuber} = \mu + bloque + riego + geno + riego * geno + e   $$
+# analisis de varianza 
+
+```{r}
+md <- lmer(formula = twue ~ 0 + (1|bloque) + riego*geno                     , data = fb)
+
+
+
+
+anova(md)
+
+
+
+library(car)
+
+Anova(md)
+``` 
+
+# comparacion de medias 
+
+```
+
